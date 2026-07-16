@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Конструктор предложения — Автоматизация плавучей кофейни</title>
+<meta name="description" content="Интерактивный калькулятор коммерческого предложения по автоматизации плавучей кофейни в Актау.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0A1416;
+    --panel:#101E22;
+    --panel-2:#152227;
+    --line: rgba(231,238,234,0.10);
+    --line-strong: rgba(231,238,234,0.22);
+    --text:#E7EEEA;
+    --text-dim: rgba(231,238,234,0.58);
+    --text-faint: rgba(231,238,234,0.36);
+    --accent:#37B6A0;
+    --accent-bright:#6BE0C9;
+    --accent-dim: rgba(55,182,160,0.14);
+    --radius-s:10px;
+    --radius-m:18px;
+    --radius-l:26px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+    --bar-height: 84px;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+  html,body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  body{
+    padding-bottom: calc(var(--bar-height) + 24px);
+    background-image:
+      radial-gradient(circle at 12% 0%, rgba(55,182,160,0.08), transparent 40%),
+      radial-gradient(circle at 100% 20%, rgba(55,182,160,0.05), transparent 35%);
+  }
+
+  .wrap{ max-width:640px; margin:0 auto; padding: 28px 20px 0; }
+
+  /* ---------- fade in ---------- */
+  .fade{
+    opacity:0;
+    transform:translateY(14px);
+    animation: fadeUp .7s cubic-bezier(.22,1,.36,1) forwards;
+    animation-delay: calc(var(--d,0) * .09s);
+  }
+  @keyframes fadeUp{ to{ opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){
+    .fade{ animation:none; opacity:1; transform:none; }
+    *{ scroll-behavior:auto !important; }
+  }
+
+  /* ---------- header ---------- */
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 12px;
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-size:28px;
+    font-weight:700;
+    line-height:1.15;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  p.subtitle{
+    color:var(--text-dim);
+    font-size:14.5px;
+    margin:0 0 26px;
+    max-width:46ch;
+  }
+
+  /* ---------- gauge card ---------- */
+  .gauge-card{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:20px;
+    margin-bottom:28px;
+  }
+  .gauge{ flex-shrink:0; width:74px; height:74px; position:relative; }
+  .gauge svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .gauge circle{ fill:none; stroke-width:6; }
+  .gauge .track{ stroke: var(--line-strong); }
+  .gauge .value{
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-dasharray: 195;
+    stroke-dashoffset: 195;
+    transition: stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);
+  }
+  .gauge__pct{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono);
+    font-size:15px;
+    font-weight:600;
+  }
+  .gauge-card__text .k{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin:0 0 4px;
+  }
+  .gauge-card__text .v{
+    font-size:14.5px;
+    color:var(--text-dim);
+    margin:0;
+  }
+
+  /* ---------- stage sections ---------- */
+  .stage{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:20px 18px 8px;
+    margin-bottom:18px;
+  }
+  .stage__head{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:6px;
+  }
+  .stage__eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 6px;
+  }
+  .stage__title{
+    font-family:var(--font-display);
+    font-size:17px;
+    font-weight:600;
+    margin:0 0 6px;
+    line-height:1.3;
+  }
+  .stage__meta{
+    font-size:12.5px;
+    color:var(--text-faint);
+    margin:0;
+  }
+  .stage__meta .sum{
+    font-family:var(--font-mono);
+    color:var(--accent-bright);
+  }
+
+  /* switch (stage master toggle) */
+  .switch-wrap{ flex-shrink:0; padding-top:2px; }
+  .switch-wrap input{ position:absolute; opacity:0; width:0; height:0; }
+  .switch{
+    display:block;
+    width:46px; height:27px;
+    background:var(--line-strong);
+    border-radius:100px;
+    position:relative;
+    transition: background .25s ease;
+    cursor:pointer;
+  }
+  .switch::after{
+    content:'';
+    position:absolute;
+    top:3px; left:3px;
+    width:21px; height:21px;
+    border-radius:50%;
+    background:var(--text);
+    transition: transform .28s cubic-bezier(.22,1,.36,1), background .25s ease;
+  }
+  .switch-wrap input:checked + .switch{ background:var(--accent); }
+  .switch-wrap input:checked + .switch::after{ transform: translateX(19px); background:#08211c; }
+  .switch-wrap input:focus-visible + .switch{ outline:2px solid var(--accent-bright); outline-offset:2px; }
+
+  /* checklist rows */
+  .checklist{ list-style:none; margin:0; padding:0; }
+  .check-item{
+    border-bottom:1px solid var(--line);
+  }
+  .check-item:last-child{ border-bottom:none; }
+  .check-item label{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:15px 2px;
+    cursor:pointer;
+    min-height:56px;
+  }
+  .check-item input{ position:absolute; opacity:0; width:0; height:0; }
+  .check-item__box{
+    flex-shrink:0;
+    width:24px; height:24px;
+    border-radius:7px;
+    border:1.5px solid var(--line-strong);
+    background:transparent;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .22s ease, border-color .22s ease, transform .18s ease;
+  }
+  .check-item__box svg{
+    width:14px; height:14px;
+    stroke: var(--bg);
+    stroke-width:3;
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    transition: stroke-dashoffset .28s ease .02s;
+  }
+  .check-item input:checked ~ .check-item__box{
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .check-item input:checked ~ .check-item__box svg{ stroke-dashoffset:0; }
+  .check-item label:active .check-item__box{ transform:scale(.9); }
+  .check-item__text{
+    flex:1;
+    font-size:14.5px;
+    color:var(--text);
+    transition: color .22s ease;
+  }
+  .check-item input:not(:checked) ~ .check-item__text{ color:var(--text-faint); }
+  .check-item__price{
+    flex-shrink:0;
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--text-dim);
+    white-space:nowrap;
+    padding-left:6px;
+    transition: color .22s ease, opacity .22s ease;
+  }
+  .check-item input:not(:checked) ~ .check-item__price{ opacity:.4; }
+  .check-item input:checked ~ .check-item__price{ color:var(--accent-bright); }
+
+  /* ---------- monthly card ---------- */
+  .monthly{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:20px 18px;
+    margin-bottom:18px;
+  }
+  .monthly__head{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+  }
+  .monthly__title{
+    font-family:var(--font-display);
+    font-size:16.5px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .monthly__price{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--accent-bright);
+    margin:0;
+  }
+  .monthly__list{
+    margin:16px 0 0;
+    padding:16px 0 0;
+    border-top:1px solid var(--line);
+    list-style:none;
+    display:grid;
+    gap:9px;
+  }
+  .monthly__list li{
+    font-size:13px;
+    color:var(--text-dim);
+    padding-left:16px;
+    position:relative;
+  }
+  .monthly__list li::before{
+    content:'';
+    position:absolute; left:0; top:7px;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+
+  /* ---------- sticky bar ---------- */
+  .sticky-bar{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    height:var(--bar-height);
+    background: rgba(16,30,34,0.92);
+    backdrop-filter: blur(14px);
+    border-top:1px solid var(--line-strong);
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding: 0 16px;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
+  }
+  .sticky-bar__totals{ flex:1; min-width:0; }
+  .sticky-bar__label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin:0 0 2px;
+  }
+  .sticky-bar__value{
+    font-family:var(--font-mono);
+    font-size:20px;
+    font-weight:600;
+    color:var(--text);
+    display:block;
+  }
+  .sticky-bar__monthly{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    display:block;
+    margin-top:1px;
+  }
+  .cta{
+    flex-shrink:0;
+    background: var(--accent);
+    color:#08211c;
+    border:none;
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:14.5px;
+    padding: 15px 20px;
+    border-radius: var(--radius-s);
+    cursor:pointer;
+    transition: transform .2s ease, background .2s ease;
+    white-space:nowrap;
+  }
+  .cta:hover{ background:var(--accent-bright); transform:translateY(-2px); }
+  .cta:active{ transform:translateY(0) scale(.98); }
+  .cta:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+  footer.credit{
+    max-width:640px;
+    margin:8px auto 0;
+    padding: 6px 20px 0;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+
+  @media (min-width:640px){
+    .wrap{ padding-top:44px; }
+    h1.title{ font-size:32px; }
+    .sticky-bar{ padding: 0 24px; }
+    .sticky-bar__value{ font-size:22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <p class="eyebrow fade" style="--d:0">NextBot · Система автоматизации</p>
+  <h1 class="title fade" style="--d:1">Конструктор предложения</h1>
+  <p class="subtitle fade" style="--d:2">Разработка веб-ресурса и ИИ-инфраструктуры для автономной кофейни на воде — Актау. Отметьте нужные модули — стоимость пересчитается сама.</p>
+
+  <div class="gauge-card fade" style="--d:3">
+    <div class="gauge">
+      <svg viewBox="0 0 74 74">
+        <circle class="track" cx="37" cy="37" r="31"></circle>
+        <circle class="value" id="gaugeCircle" cx="37" cy="37" r="31"></circle>
+      </svg>
+      <span class="gauge__pct" id="gaugePct">100%</span>
+    </div>
+    <div class="gauge-card__text">
+      <p class="k">Загрузка предложения</p>
+      <p class="v">Доля выбранных модулей от полного объёма внедрения</p>
+    </div>
+  </div>
+
+  <!-- STAGE 1 -->
+  <section class="stage fade" style="--d:4">
+    <div class="stage__head">
+      <span class="switch-wrap">
+        <input type="checkbox" id="stageAll1" class="js-stage-all" checked>
+        <label class="switch" for="stageAll1"></label>
+      </span>
+      <div>
+        <p class="stage__eyebrow">Этап 1 · Базовый запуск</p>
+        <h2 class="stage__title">Немедленная разгрузка канала связи</h2>
+        <p class="stage__meta">Срок: несколько дней · <span class="sum" data-stage-sum="1">100 000 ₸</span></p>
+      </div>
+    </div>
+    <ul class="checklist">
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="1" data-price="40000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Сайт-визитка: главный экран + точные геометки к пирсу</span>
+        </label>
+        <span class="check-item__price">40 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="1" data-price="20000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Кнопки-переходы на отзывы (2ГИС / Яндекс Карты)</span>
+        </label>
+        <span class="check-item__price">20 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="1" data-price="15000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Удалённое управление меню (Google Docs / PDF)</span>
+        </label>
+        <span class="check-item__price">15 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="1" data-price="25000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Базовый чат-бот WhatsApp — FAQ, до 90% обращений</span>
+        </label>
+        <span class="check-item__price">25 000 ₸</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- STAGE 2 -->
+  <section class="stage fade" style="--d:5">
+    <div class="stage__head">
+      <span class="switch-wrap">
+        <input type="checkbox" id="stageAll2" class="js-stage-all" checked>
+        <label class="switch" for="stageAll2"></label>
+      </span>
+      <div>
+        <p class="stage__eyebrow">Этап 2 · Аналитика и бронь</p>
+        <h2 class="stage__title">Сквозная аналитика трафика и гибридная бронь</h2>
+        <p class="stage__meta">После этапа 1 · <span class="sum" data-stage-sum="2">150 000 ₸</span></p>
+      </div>
+    </div>
+    <ul class="checklist">
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="2" data-price="25000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Именные QR-коды для каждого бариста</span>
+        </label>
+        <span class="check-item__price">25 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="2" data-price="30000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">UTM-метки + цели в Яндекс Метрике</span>
+        </label>
+        <span class="check-item__price">30 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="2" data-price="35000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Личный кабинет с графиками посещаемости</span>
+        </label>
+        <span class="check-item__price">35 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="2" data-price="35000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">ИИ-логика распознавания намерений (NextBot)</span>
+        </label>
+        <span class="check-item__price">35 000 ₸</span>
+      </li>
+      <li class="check-item">
+        <label>
+          <input type="checkbox" class="js-item" data-stage="2" data-price="25000" checked>
+          <span class="check-item__box"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-8"/></svg></span>
+          <span class="check-item__text">Push-уведомления менеджеру + перехват диалога</span>
+        </label>
+        <span class="check-item__price">25 000 ₸</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- MONTHLY -->
+  <section class="monthly fade" style="--d:6">
+    <div class="monthly__head">
+      <span class="switch-wrap">
+        <input type="checkbox" id="monthlyToggle" checked>
+        <label class="switch" for="monthlyToggle"></label>
+      </span>
+      <div>
+        <h2 class="monthly__title">Техническое обслуживание</h2>
+        <p class="monthly__price">50 000 ₸ / месяц — не входит в единоразовую сумму</p>
+      </div>
+    </div>
+    <ul class="monthly__list">
+      <li>Облачная платформа автоматизации NextBot и активный WhatsApp-шлюз</li>
+      <li>Отказоустойчивость инфраструктуры и бесплатный хостинг сайта</li>
+      <li>Правки логики, промптов ИИ и структуры кнопок сайта по запросу</li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="sticky-bar">
+  <div class="sticky-bar__totals">
+    <p class="sticky-bar__label">Итого единоразово</p>
+    <span class="sticky-bar__value" id="totalValue">250 000 ₸</span>
+    <span class="sticky-bar__monthly" id="monthlyValue">+ 50 000 ₸ / мес</span>
+  </div>
+  <button class="cta" id="ctaBtn" type="button">Принять предложение</button>
+</div>
+
+<footer class="credit">
+  <span>Разработчик: Yernar (Ina) Amankosuly</span>
+  <span>AI &amp; Automation · 2026</span>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const items = Array.from(document.querySelectorAll('.js-item'));
+  const stageAllToggles = {
+    1: document.getElementById('stageAll1'),
+    2: document.getElementById('stageAll2')
+  };
+  const monthlyToggle = document.getElementById('monthlyToggle');
+  const totalValueEl = document.getElementById('totalValue');
+  const monthlyValueEl = document.getElementById('monthlyValue');
+  const gaugeCircle = document.getElementById('gaugeCircle');
+  const gaugePct = document.getElementById('gaugePct');
+  const ctaBtn = document.getElementById('ctaBtn');
+
+  const CIRC = 2 * Math.PI * 31; // ~194.8
+  const MAX_ONETIME = items.reduce((sum, el) => sum + Number(el.dataset.price), 0);
+  const MONTHLY_FEE = 50000;
+
+  let currentTotal = MAX_ONETIME;
+
+  function formatMoney(n){
+    return n.toLocaleString('ru-RU') + ' ₸';
+  }
+
+  function animateNumber(el, from, to, suffix){
+    const duration = 320;
+    const start = performance.now();
+    function step(now){
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const value = Math.round(from + (to - from) * eased);
+      el.textContent = value.toLocaleString('ru-RU') + (suffix || ' ₸');
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function recalc(){
+    let grandTotal = 0;
+
+    [1, 2].forEach((stageNum) => {
+      const stageItems = items.filter(el => Number(el.dataset.stage) === stageNum);
+      const checkedItems = stageItems.filter(el => el.checked);
+      const stageSum = checkedItems.reduce((s, el) => s + Number(el.dataset.price), 0);
+      grandTotal += stageSum;
+
+      const sumEl = document.querySelector(`[data-stage-sum="${stageNum}"]`);
+      if (sumEl) sumEl.textContent = formatMoney(stageSum);
+
+      const allToggle = stageAllToggles[stageNum];
+      allToggle.checked = checkedItems.length === stageItems.length;
+      allToggle.indeterminate = checkedItems.length > 0 && checkedItems.length < stageItems.length;
+    });
+
+    animateNumber(totalValueEl, currentTotal, grandTotal);
+    currentTotal = grandTotal;
+
+    const pct = MAX_ONETIME > 0 ? Math.round((grandTotal / MAX_ONETIME) * 100) : 0;
+    gaugeCircle.style.strokeDashoffset = CIRC - (CIRC * pct / 100);
+    gaugePct.textContent = pct + '%';
+
+    monthlyValueEl.textContent = monthlyToggle.checked
+      ? '+ ' + formatMoney(MONTHLY_FEE) + ' / мес'
+      : 'Обслуживание не выбрано';
+
+    ctaBtn.disabled = grandTotal === 0 && !monthlyToggle.checked;
+  }
+
+  items.forEach(el => el.addEventListener('change', recalc));
+
+  Object.entries(stageAllToggles).forEach(([stageNum, toggle]) => {
+    toggle.addEventListener('change', () => {
+      items
+        .filter(el => Number(el.dataset.stage) === Number(stageNum))
+        .forEach(el => { el.checked = toggle.checked; });
+      recalc();
+    });
+  });
+
+  monthlyToggle.addEventListener('change', recalc);
+
+  ctaBtn.addEventListener('click', () => {
+    const lines = ['Здравствуйте! Хочу подтвердить предложение по автоматизации кофейни:', ''];
+
+    [1, 2].forEach((stageNum) => {
+      const stageItems = items.filter(el => Number(el.dataset.stage) === stageNum);
+      const checkedItems = stageItems.filter(el => el.checked);
+      if (checkedItems.length === 0) return;
+      const label = stageNum === 1 ? 'Этап 1 · Базовый запуск' : 'Этап 2 · Аналитика и бронь';
+      lines.push(label + ':');
+      checkedItems.forEach(el => {
+        const text = el.closest('label').querySelector('.check-item__text').textContent.trim();
+        lines.push('  • ' + text);
+      });
+      lines.push('');
+    });
+
+    lines.push('Итого единоразово: ' + formatMoney(currentTotal));
+    if (monthlyToggle.checked){
+      lines.push('Обслуживание: ' + formatMoney(MONTHLY_FEE) + ' / мес');
+    }
+
+    const text = encodeURIComponent(lines.join('\n'));
+    window.open(`https://t.me/share/url?url=&text=${text}`, '_blank', 'noopener');
+  });
+
+  recalc();
+  gaugeCircle.style.strokeDashoffset = 0;
+});
+</script>
+</body>
+</html>
