@@ -649,7 +649,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const text = encodeURIComponent(lines.join('\n'));
-    window.open(`https://t.me/share/url?url=&text=${text}`, '_blank', 'noopener');
+    
+    // ВМЕСТО СТАРОЙ СТРОКИ share/url ПИШЕМ ЭТО:
+    // Замени "твой_юзернейм" на свой реальный ник в Telegram (без символа @)
+    window.open(`https://t.me/Sophia_Megustas?text=${text}`, '_blank', 'noopener');
   });
 
   recalc();
